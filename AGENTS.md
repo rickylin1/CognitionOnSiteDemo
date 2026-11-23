@@ -6,7 +6,7 @@ This repo simulates migrating vehicle-telemetry stream jobs from Scala/Spark Str
 ## Layout
 - `legacy-spark/`: Scala jobs. Read them to learn the semantics. They are not built or run here.
 - `rust-processors/`: Cargo workspace.
-  - `common/`: `Event`, `read_events`, `dedup_by_event_id` (R1), `sort_by_vin_and_time` (R2), `write_jsonl`.
+  - `common/`: `Event`, `read_events`, `dedup_by_event_id` (R1), `sort_by_vin_and_time` (R2), `round2` (R4), `write_jsonl`.
   - `battery_health/`: the reference port.
 - `fixtures/`: `events.jsonl`, `golden/<job>.jsonl`, and a README explaining every edge case.
 - `harness/`: `replay_and_diff.sh <job>` and `diff.py`.
@@ -23,7 +23,8 @@ Golden files and job output are JSONL: one JSON object per line, records in the 
 - **Timestamps** (`ts`, `session_start`, `session_end`): RFC 3339 UTC strings with a `Z` suffix and whole seconds, exactly as in the input, e.g. `"2026-11-20T09:47:30Z"` (not `+00:00`, no fractional seconds). Serializing a `chrono::DateTime<Utc>` with serde produces this format.
 - **Integers:** `soc_pct`, `start_soc_pct`, `end_soc_pct`, `soc_gained_pct`, `duration_min`. `duration_min` is whole minutes, floored (`(end - start).num_minutes()`).
 - **Floats:** `battery_temp_c` (or `null`), `lat`, `lon`.
-- **`lat`/`lon` (R4):** rounded to 2 decimal places, half away from zero: `(x * 100.0).round() / 100.0` in Rust, `HALF_UP` in the Scala job. No fixture coordinate falls exactly on a tie (`x.xx5`), so the choice of tie-breaking never affects the golden output.
+- **`lat`/`lon` (R4):** rounded to 2 decimal places, half away from zero (`HALF_UP` in the Scala job). Use `common::round2` for all location rounding.
+  Why: `(x * 100.0).round() / 100.0` misrounds float ties vs Scala's `BigDecimal` (e.g. 37.745 gives 37.74, not 37.75); `round2` rounds the decimal form instead.
 - **VIN:** a 17-character string, copied unchanged.
 
 ## Porting pattern
