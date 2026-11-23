@@ -21,4 +21,4 @@
 {"event_id":"evt-0020","vin":"TESTVIN0000000002","ts":"2026-11-20T12:00:00Z","event_type":"charge_start","soc_pct":30,"battery_temp_c":null,"lat":40.71278,"lon":-74.00597}
 {"event_id":"evt-0021","vin":"TESTVIN0000000002","ts":"2026-11-20T12:40:00Z","event_type":"battery_status","soc_pct":55,"battery_temp_c":30.2,"lat":40.71281,"lon":-74.00599}
 {"event_id":"evt-0022","vin":"TESTVIN0000000002","ts":"2026-11-20T13:30:00Z","event_type":"battery_status","soc_pct":74,"battery_temp_c":31.5,"lat":40.75801,"lon":-73.98551}
-{"event_id":"evt-0023","vin":"TESTVIN0000000003","ts":"2026-11-20T18:00:00Z","event_type":"charge_start","soc_pct":40,"battery_temp_c":null,"lat":47.61500,"lon":-122.32000}
+{"event_id":"evt-0023","vin":"TESTVIN0000000003","ts":"2026-11-20T18:00:00Z","event_type":"charge_start","soc_pct":40,"battery_temp_c":null,"lat":47.61530,"lon":-122.32000}
