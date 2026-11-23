@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 # One crate per ported job. `common` holds the shared event model and R1/R2 helpers.
-members = ["common", "battery_health"]
+members = ["common", "battery_health", "charging_session"]
 
 [workspace.package]
 edition = "2021"
