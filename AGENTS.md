@@ -17,6 +17,15 @@ cd rust-processors && cargo test          # unit + integration tests, including 
 ./harness/replay_and_diff.sh <job>        # run from repo root; prints PASS or FAIL
 ```
 
+## Output format
+Golden files and job output are JSONL: one JSON object per line, records in the job's documented sort order. `diff.py` compares parsed values, so key order and `80` vs `80.0` don't matter, but types and exact values do.
+
+- **Timestamps** (`ts`, `session_start`, `session_end`): RFC 3339 UTC strings with a `Z` suffix and whole seconds, exactly as in the input, e.g. `"2026-11-20T09:47:30Z"` (not `+00:00`, no fractional seconds). Serializing a `chrono::DateTime<Utc>` with serde produces this format.
+- **Integers:** `soc_pct`, `start_soc_pct`, `end_soc_pct`, `soc_gained_pct`, `duration_min`. `duration_min` is whole minutes, floored (`(end - start).num_minutes()`).
+- **Floats:** `battery_temp_c` (or `null`), `lat`, `lon`.
+- **`lat`/`lon` (R4):** rounded to 2 decimal places, half away from zero: `(x * 100.0).round() / 100.0` in Rust, `HALF_UP` in the Scala job. No fixture coordinate falls exactly on a tie (`x.xx5`), so the choice of tie-breaking never affects the golden output.
+- **VIN:** a 17-character string, copied unchanged.
+
 ## Porting pattern
 Copy `battery_health/` exactly:
 1. Make one crate per job: `rust-processors/<job>/`, added to `members` in `rust-processors/Cargo.toml`.

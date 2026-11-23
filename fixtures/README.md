@@ -36,3 +36,5 @@ Do not edit these files to make a test pass.
 - charging_session: the orphan stop `evt-0001` at 05:00 is ignored. Start `evt-0016` 10:00 (soc 15) → stop `evt-0018` 11:05:20 (soc 55). Duration 65.33 min, floored to 65; gained 40; lat/lon 34.05, -118.24.
 
 Golden files are sorted by `vin` (charging_session: then by `session_start`).
+
+No `lat`/`lon` value sits exactly on a 2-decimal rounding tie (`x.xx5`), so any correct rounding method gives the golden values.
