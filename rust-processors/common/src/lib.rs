@@ -64,6 +64,52 @@ pub fn sort_by_vin_and_time(events: &mut [Event]) {
     events.sort_by(|a, b| (&a.vin, a.ts, &a.event_id).cmp(&(&b.vin, b.ts, &b.event_id)));
 }
 
+/// R4: round to 2 decimal places, half away from zero, matching Scala's
+/// `BigDecimal(x).setScale(2, HALF_UP)`. Rounds the shortest decimal form of `x`
+/// rather than `x * 100.0`, which misrounds ties (37.745 * 100.0 = 3774.4999...).
+pub fn round2(x: f64) -> f64 {
+    if !x.is_finite() {
+        return x;
+    }
+    let s = format!("{}", x.abs());
+    let (int_part, frac) = s.split_once('.').unwrap_or((&s, ""));
+    if frac.len() <= 2 {
+        return x;
+    }
+    // Digits of |x| truncated to 2 decimals, then +1 in the last place if the 3rd decimal is >= 5.
+    let mut digits: Vec<u8> = format!("{int_part}{}", &frac[..2]).into_bytes();
+    if frac.as_bytes()[2] >= b'5' {
+        let mut i = digits.len();
+        loop {
+            if i == 0 {
+                digits.insert(0, b'1');
+                break;
+            }
+            i -= 1;
+            if digits[i] == b'9' {
+                digits[i] = b'0';
+            } else {
+                digits[i] += 1;
+                break;
+            }
+        }
+    }
+    let (whole, cents) = digits.split_at(digits.len() - 2);
+    let rounded: f64 = format!(
+        "{}.{}",
+        std::str::from_utf8(whole).unwrap(),
+        std::str::from_utf8(cents).unwrap()
+    )
+    .parse()
+    .unwrap();
+    // BigDecimal has no negative zero: -0.001 rounds to 0.0.
+    if rounded == 0.0 {
+        0.0
+    } else {
+        rounded.copysign(x)
+    }
+}
+
 /// Write one JSON object per line to stdout. Returns the number of records written.
 pub fn write_jsonl<T: Serialize>(records: &[T]) -> io::Result<usize> {
     let mut out = io::stdout().lock();
@@ -117,5 +163,27 @@ mod tests {
         sort_by_vin_and_time(&mut events);
         let ids: Vec<_> = events.iter().map(|e| e.event_id.as_str()).collect();
         assert_eq!(ids, ["evt-1", "evt-9", "evt-2", "evt-3"]);
+    }
+
+    #[test]
+    fn round2_rounds_ties_half_up_like_scala() {
+        assert_eq!(round2(37.745), 37.75);
+        assert_eq!(round2(-118.245), -118.25);
+    }
+
+    #[test]
+    fn round2_rounds_non_ties_to_nearest() {
+        assert_eq!(round2(37.77493), 37.77);
+        assert_eq!(round2(-122.41942), -122.42);
+        assert_eq!(round2(37.77511), 37.78);
+    }
+
+    #[test]
+    fn round2_edge_cases() {
+        assert_eq!(round2(9.995), 10.0);
+        assert_eq!(round2(-0.995), -1.0);
+        assert_eq!(round2(40.7), 40.7);
+        assert_eq!(round2(5.0), 5.0);
+        assert_eq!(round2(-0.001).to_string(), "0");
     }
 }
