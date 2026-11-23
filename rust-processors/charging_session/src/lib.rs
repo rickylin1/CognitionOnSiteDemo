@@ -1,7 +1,7 @@
 //! Port of legacy-spark/ChargingSessionJob.scala.
 
 use chrono::{DateTime, Utc};
-use common::{dedup_by_event_id, sort_by_vin_and_time, Event, EventType};
+use common::{dedup_by_event_id, round2, sort_by_vin_and_time, Event, EventType};
 use serde::Serialize;
 
 /// One closed charging session. Location is the charge_start's, rounded to 2 decimals (R4).
@@ -16,11 +16,6 @@ pub struct ChargingSession {
     pub soc_gained_pct: i32,
     pub lat: f64,
     pub lon: f64,
-}
-
-/// R4: round half away from zero to 2 decimal places.
-pub fn round2(x: f64) -> f64 {
-    (x * 100.0).round() / 100.0
 }
 
 /// Pure function: events in (any order, may contain duplicates),
