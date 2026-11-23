@@ -1,0 +1,14 @@
+[workspace]
+resolver = "2"
+# One crate per ported job. `common` holds the shared event model and R1/R2 helpers.
+members = ["common", "battery_health"]
+
+[workspace.package]
+edition = "2021"
+version = "0.1.0"
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+chrono = { version = "0.4", default-features = false, features = ["std", "serde"] }
+common = { path = "common" }
